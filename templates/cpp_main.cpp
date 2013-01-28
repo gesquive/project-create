@@ -1,6 +1,6 @@
 /*
  * %(project_name)s
- * Copyright (C) %(author_name_full)s %(date_year)s <%(author_email)s>
+ * Copyright © %(author_name_full)s %(date_year)s %(author_email)s
  *
  * %(project_name)s is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,7 +24,7 @@
 #include <signal.h>
 #include <cctype>
 
-#define AUTHOR "%(author_name_full)s (%(author_email)s)"
+#define AUTHOR "%(author_name_full)s %(author_email)s"
 #define VERSION "0.1"
 
 const char* app_name;

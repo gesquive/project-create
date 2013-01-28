@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # %(project_name)s.py
 # %(author_name_short)s %(date_str)s V0.1
-#
-# %(project_description)s
+"""
+%(project_description)s
+"""
 
 import getopt
 import sys
@@ -12,9 +13,16 @@ import traceback
 import logging
 import logging.handlers
 
-__author__ = "%(author_name_full)s"
-__version__ = "0.1"
 __app__ = os.path.basename(__file__)
+__author__ = "%(author_name_full)s"
+__copyright__ = "Copyright %(date_year)s"
+__credits__ = ["%(author_name_full)s"]
+__license__ = "GPL"
+__version__ = "0.1"
+__maintainer__ = "%(author_name_full)s"
+__email__ = "%(author_email)s"
+__status__ = "Beta"
+
 
 #--------------------------------------
 # Configurable Constants
