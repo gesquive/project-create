@@ -332,7 +332,7 @@ def update(info_file_path, force_update=False):
     else:
         cmp_result = compare_versions(__version__, update_version)
         if cmp_result < 0:
-            print "Newer version %s available, downloading..." % __version__
+            print "Newer version %s available, downloading..." % update_version
         elif cmp_result > 0:
             print "Local version %s newer then available %s, not updating." \
                 % (__version__, update_version)

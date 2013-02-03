@@ -1,9 +1,10 @@
-#summary Latest version summary, for the update feature.
+#summary
+Latest version summary, for the update feature.
 
 Please note this page is designed for use with the '--update' flag.
-If you're a human please download from:
+If you're a human please download from: https://raw.github.com/gesquive/project-create/master/project-create.py
 
-The latest is version: 0.1
+The latest is version: 1.0.2
 
 info: https://github.com/gesquive/project-create
 
