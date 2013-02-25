@@ -16,12 +16,12 @@ __author__ = "Gus E"
 __copyright__ = "Copyright 2013"
 __credits__ = ["Gus E"]
 __license__ = "GPL"
-__version__ = "1.0.2"
+__version__ = "1.0.4"
 __maintainer__ = "Gus E"
 __email__ = ""
 __status__ = "Production"
 
-info_file_path = 'https://raw.github.com/gesquive/quick-create-project/master/create-project.info'
+info_file_path = 'https://raw.github.com/gesquive/project-create/master/project-create.info'
 
 #--------------------------------------
 # Configurable Constants
@@ -31,7 +31,8 @@ AUTHOR_NAME_SHORT = "GusE"
 # Run "python -c "import re; print "email@address.com".encode('base64')" to get a obfuscated value
 AUTHOR_EMAIL = "Z2VzcXVpdmVAZ21haWwuY28="
 if not "@" in AUTHOR_EMAIL:
-    AUTHOR_EMAIL = AUTHOR_EMAIL.decode("base64")
+    __email__ = AUTHOR_EMAIL.decode("base64")
+    AUTHOR_EMAIL = __email__
 
 FILES = {}
 
@@ -82,7 +83,7 @@ def main():
     debug = False
 
     lang = 'python'
-    dir = './'
+    dir = None
     project_name = None
     description = "This is a generic python project."
     overwrite = False
@@ -119,7 +120,8 @@ def main():
     # Save filter
     if len(args) == 1:
         project_name = args[0]
-        dir = os.path.join('.', project_name)
+        if not dir:
+            dir = os.path.join('.', project_name)
     elif len(args) != 1:
         print "Error: No project_name spcified."
         usage()
@@ -131,6 +133,9 @@ def main():
         temp_dir = check_dir(dir, overwrite)
     except Exception, e:
         print e
+    except KeyboardInterrupt:
+        print ''
+        sys.exit()
     if not temp_dir:
         sys.exit(2)
     else:
@@ -150,6 +155,7 @@ def main():
         elif lang == "shell":
             sys.stdout.write("Generating a default shell project...".ljust(75))
             sys.stdout.flush()
+            generate_shell(project_name, dir, description)
             print "Done!"
 
     except (KeyboardInterrupt, SystemExit):
@@ -170,7 +176,7 @@ def check_dir(dir_path, overwrite=False):
     else:
         if not overwrite:
             print "Directory '%s' exists!" % os.path.basename(os.path.abspath(dir_path))
-            prompt = "Delete previous project? [y/n]: "
+            prompt = "Overwrite previous project files? [y/n]: "
             overwrite = raw_input(prompt).lower().startswith('y')
         if not overwrite:
             raise OSError(2, "Project already exists", dir_path)
