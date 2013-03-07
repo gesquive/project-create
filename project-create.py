@@ -16,7 +16,7 @@ __author__ = "Gus E"
 __copyright__ = "Copyright 2013"
 __credits__ = ["Gus E"]
 __license__ = "GPL"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __maintainer__ = "Gus E"
 __email__ = ""
 __status__ = "Production"
@@ -85,7 +85,7 @@ def main():
     lang = 'python'
     dir = None
     project_name = None
-    description = "This is a generic python project."
+    description = None
     overwrite = False
 
     for o, a in opts:
@@ -122,6 +122,8 @@ def main():
         project_name = args[0]
         if not dir:
             dir = os.path.join('.', project_name)
+        if not description:
+            description = "This is a generic %(lang)s project." % locals
     elif len(args) != 1:
         print "Error: No project_name spcified."
         usage()
@@ -245,7 +247,7 @@ def generate_cplusplus(project_name, project_path, project_description):
     author_name_short = AUTHOR_NAME_SHORT
     author_email = "<" + AUTHOR_EMAIL + ">"
 
-    makefile = FILES["cppmake.mk"].decode("base64")
+    makefile = FILES["cpp_make.mk"].decode("base64")
     try:
         makefile = makefile % locals()
     except KeyError, e:
