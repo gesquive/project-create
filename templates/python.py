@@ -83,11 +83,18 @@ def main():
     if not os.access(log_file, os.W_OK):
         print "Cannot write to '%%(log_file)s'.\nExiting." %% locals()
         sys.exit(2)
-    handle = logging.handlers.RotatingFileHandler(log_file,
-                                                  maxBytes=LOG_SIZE, backupCount=9)
-    format = logging.Formatter('%%(asctime)s,%%(levelname)s,%%(thread)d,%%(message)s')
-    handle.setFormatter(format)
-    logger.addHandler(handle)
+    file_handler = logging.handlers.RotatingFileHandler(log_file,
+                                            maxBytes=LOG_SIZE, backupCount=9)
+    file_formater = logging.Formatter('%%(asctime)s,%%(levelname)s,%%(thread)d,%%(message)s')
+    file_handler.setFormatter(file_formater)
+    logger.addHandler(file_handler)
+
+    if verbose:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_formatter = logging.Formatter("[%(asctime)s] %(levelname)-5.5s: %(message)s")
+        console_handler.setFormatter(console_formatter)
+        logger.addHandler(console_handler)
+
     logger.setLevel(logging.DEBUG)
 
     try:
