@@ -91,7 +91,7 @@ def main():
 
     if verbose:
         console_handler = logging.StreamHandler(sys.stdout)
-        console_formatter = logging.Formatter("[%(asctime)s] %(levelname)-5.5s: %(message)s")
+        console_formatter = logging.Formatter("[%%(asctime)s] %%(levelname)-5.5s: %%(message)s")
         console_handler.setFormatter(console_formatter)
         logger.addHandler(console_handler)
 
