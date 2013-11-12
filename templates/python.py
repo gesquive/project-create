@@ -56,6 +56,7 @@ def main():
         ["help", "verbose", "debug"])
     except getopt.GetoptError, err:
         print str(err)
+        print usage()
         sys.exit(2)
 
     verbose = False
