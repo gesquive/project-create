@@ -4,6 +4,7 @@
 """
 Generate new barebones projects
 """
+__version__ = "1.1.0"
 
 import getopt
 import sys
@@ -16,15 +17,14 @@ __author__ = "Gus E"
 __copyright__ = "Copyright 2013"
 __credits__ = ["Gus E"]
 __license__ = "GPL"
-__version__ = "1.0.8"
 __maintainer__ = "Gus E"
-__email__ = ""
+__email__ = "gesquive@gmail"
 __status__ = "Production"
 
-info_file_path = 'https://raw.github.com/gesquive/project-create/master/project-create.info'
 
 #--------------------------------------
 # Configurable Constants
+#TODO: Put this shit in a config file son
 AUTHOR_NAME_FULL = "Gus E"
 AUTHOR_NAME_SHORT = "GusE"
 # I'm just obfuscating my email a little bit to protect against spam bots
@@ -33,6 +33,9 @@ AUTHOR_EMAIL = "Z2VzcXVpdmVAZ21haWwuY28="
 if not "@" in AUTHOR_EMAIL:
     __email__ = AUTHOR_EMAIL.decode("base64")
     AUTHOR_EMAIL = __email__
+
+script_www = 'https://github.com/gesquive/project-create'
+script_url = 'https://raw.github.com/gesquive/project-create/master/project-create.py'
 
 FILES = {}
 
@@ -98,7 +101,7 @@ def main():
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-u", "--update"):
-            update(info_file_path)
+            update(script_url)
             sys.exit(0)
         elif o in ("-l", "--lang"):
             a = a.lower()
@@ -271,23 +274,23 @@ def generate_cplusplus(project_name, project_path, project_description):
     make_file.close()
 
 
-def update(info_file_path, force_update=False):
+def update(dl_url, force_update=False):
     """
-    Attempts to download the update url in order to find if an update is needed.
-    If an update is needed, the current script is backed up and the update is
-    saved in its place.
-    """
+Attempts to download the update url in order to find if an update is needed.
+If an update is needed, the current script is backed up and the update is
+saved in its place.
+"""
     import urllib
     import re
     from subprocess import call
     def compare_versions(vA, vB):
         """
-        Compares two version number strings
-        @param vA: first version string to compare
-        @param vB: second version string to compare
-        @author <a href="http_stream://sebthom.de/136-comparing-version-numbers-in-jython-pytho/">Sebastian Thomschke</a>
-        @return negative if vA < vB, zero if vA == vB, positive if vA > vB.
-        """
+Compares two version number strings
+@param vA: first version string to compare
+@param vB: second version string to compare
+@author <a href="http_stream://sebthom.de/136-comparing-version-numbers-in-jython-pytho/">Sebastian Thomschke</a>
+@return negative if vA < vB, zero if vA == vB, positive if vA > vB.
+"""
         if vA == vB: return 0
 
         def num(s):
@@ -309,26 +312,21 @@ def update(info_file_path, force_update=False):
             if vB.endswith('-SNAPSHOT'): return 1
         return rc
 
-    # dl the info file and parse it for version and dl path
+    # dl the first 256 bytes and parse it for version number
     try:
-        http_stream = urllib.urlopen(info_file_path)
-        update_file = http_stream.read()
+        http_stream = urllib.urlopen(dl_url)
+        update_file = http_stream.read(256)
         http_stream.close()
     except IOError, (errno, strerror):
         print "Unable to retrieve version data"
         print "Error %s: %s" % (errno, strerror)
         return
 
-    match_regex = re.search(r'version: (\S+)', update_file)
+    match_regex = re.search(r'__version__ *= *"(\S+)"', update_file)
     if not match_regex:
         print "No version info could be found"
         return
-    update_version  =  match_regex.group(1)
-    match_regex = re.search(r'from: (\S+)', update_file)
-    if not match_regex:
-        print "No update location was specified"
-        return
-    dl_url = match_regex.group(1)
+    update_version = match_regex.group(1)
 
     if not update_version:
         print "Unable to parse version data"
@@ -353,14 +351,38 @@ def update(info_file_path, force_update=False):
     app_path = os.path.realpath(sys.argv[0])
 
     if not os.access(app_path, os.W_OK):
-        print "Cannot update --  unable to write to %s" % app_path
+        print "Cannot update -- unable to write to %s" % app_path
 
     dl_path = app_path + ".new"
     backup_path = app_path + ".old"
     try:
         dl_file = open(dl_path, 'w')
         http_stream = urllib.urlopen(dl_url)
-        dl_file.write(http_stream.read())
+        total_size = None
+        bytes_so_far = 0
+        chunk_size = 8192
+        try:
+            total_size = int(http_stream.info().getheader('Content-Length').strip())
+        except:
+            # The header is improper or missing Content-Length, just download
+            dl_file.write(http_stream.read())
+
+        while total_size:
+            chunk = http_stream.read(chunk_size)
+            dl_file.write(chunk)
+            bytes_so_far += len(chunk)
+
+            if not chunk:
+                break
+
+            percent = float(bytes_so_far) / total_size
+            percent = round(percent*100, 2)
+            sys.stdout.write("Downloaded %d of %d bytes (%0.2f%%)\r" %
+                (bytes_so_far, total_size, percent))
+
+            if bytes_so_far >= total_size:
+                sys.stdout.write('\n')
+
         http_stream.close()
         dl_file.close()
     except IOError, (errno, strerror):
@@ -382,7 +404,11 @@ def update(info_file_path, force_update=False):
             % (dl_path, app_path, errno, strerror)
         return
 
-    os.chmod(app_path, 0755)
+    try:
+        import shutil
+        shutil.copymode(backup_path, app_path)
+    except:
+        os.chmod(app_path, 0755)
 
     print "New version installed as %s" % app_path
     print "(previous version backed up to %s)" % (backup_path)
