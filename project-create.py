@@ -4,13 +4,14 @@
 """
 Generate new barebones projects
 """
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 import getopt
 import sys
 import os
 import subprocess
 import traceback
+import ConfigParser
 
 __app__ = os.path.basename(__file__)
 __author__ = "Gus E"
@@ -24,20 +25,14 @@ __status__ = "Production"
 
 #--------------------------------------
 # Configurable Constants
-#TODO: Put this shit in a config file son
-AUTHOR_NAME_FULL = "Gus E"
-AUTHOR_NAME_SHORT = "GusE"
-# I'm just obfuscating my email a little bit to protect against spam bots
-# Run "python -c "import re; print "email@address.com".encode('base64')" to get a obfuscated value
-AUTHOR_EMAIL = "Z2VzcXVpdmVAZ21haWwuY28="
-if not "@" in AUTHOR_EMAIL:
-    __email__ = AUTHOR_EMAIL.decode("base64")
-    AUTHOR_EMAIL = __email__
-
 script_www = 'https://github.com/gesquive/project-create'
 script_url = 'https://raw.github.com/gesquive/project-create/master/project-create.py'
 
 FILES = {}
+
+config_author_name_full = "Default Author"
+config_author_name_short = "Default"
+config_author_email = "default@email.com"
 
 verbose = False
 debug = False
@@ -74,6 +69,7 @@ Options and arguments:
 
 def main():
     global verbose, debug
+    global config_author_name_full, config_author_name_short, config_author_email
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hvul:d:s:o", \
@@ -90,6 +86,31 @@ def main():
     project_name = None
     description = None
     overwrite = False
+
+    config_path = get_config_path()
+    if (config_path):
+        config = ConfigParser.ConfigParser()
+        config.read(config_path)
+
+        config_author_name_full = config.get("Values", "Full_Name").strip()
+        config_author_name_short = config.get("Values", "Short_Name").strip()
+        config_author_email = config.get("Values", "Email").strip()
+    else:
+        config_path =  os.path.join(os.path.expanduser('~'),
+            '.config', "project-create", "project-create.conf")
+        print "No config file exists, please fill in the following values."
+        config_author_name_full = raw_input("Full author name: ").strip()
+        config_author_name_short = raw_input("Short author name: ").strip()
+        config_author_email = raw_input("Author email: ").strip()
+
+        os.makedirs(os.path.dirname(config_path))
+        config = ConfigParser.ConfigParser()
+        config.add_section("Values")
+        config.set("Values", 'Full_Name', config_author_name_full)
+        config.set("Values", 'Short_Name', config_author_name_short)
+        config.set("Values", 'Email', config_author_email)
+        with open(config_path, 'wb') as configfile:
+            config.write(configfile)
 
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -191,15 +212,16 @@ def check_dir(dir_path, overwrite=False):
 
 
 def generate_python(project_name, project_path, project_description):
+    global config_author_name_full, config_author_name_short, config_author_email
     from datetime import date
     import stat
     today = date.today()
     date_str = today.strftime("%Y.%m.%d")
     date_year = today.strftime("%Y")
 
-    author_name_full = AUTHOR_NAME_FULL
-    author_name_short = AUTHOR_NAME_SHORT
-    author_email = AUTHOR_EMAIL
+    author_name_full = config_author_name_full
+    author_name_short = config_author_name_short
+    author_email = config_author_email
 
     src = FILES["python.py"].decode("base64")
     try:
@@ -217,12 +239,13 @@ def generate_python(project_name, project_path, project_description):
 
 
 def generate_shell(project_name, project_path, project_description):
+    global config_author_name_short
     from datetime import date
     import stat
     today = date.today()
     date_str = today.strftime("%Y.%m.%d")
 
-    author_name_short = AUTHOR_NAME_SHORT
+    author_name_short = config_author_name_short
 
     src = FILES["shell.sh"].decode("base64")
     try:
@@ -240,15 +263,16 @@ def generate_shell(project_name, project_path, project_description):
 
 
 def generate_cplusplus(project_name, project_path, project_description):
+    global config_author_name_full, config_author_name_short, config_author_email
     from datetime import date
     import stat
     today = date.today()
     date_str = today.strftime("%Y.%m.%d")
     date_year = today.strftime("%Y")
 
-    author_name_full = AUTHOR_NAME_FULL
-    author_name_short = AUTHOR_NAME_SHORT
-    author_email = "<" + AUTHOR_EMAIL + ">"
+    author_name_full = config_author_name_full
+    author_name_short = config_author_name_short
+    author_email = "<" + config_author_email + ">"
 
     makefile = FILES["cpp_make.mk"].decode("base64")
     try:
@@ -272,6 +296,23 @@ def generate_cplusplus(project_name, project_path, project_description):
     make_file.write(makefile)
     make_file.flush()
     make_file.close()
+
+
+def get_config_path():
+    config_path = None
+    project_name = __app__.split('.')[0]
+    project_name = "project-create"
+    config_name = project_name+".conf"
+    locations = [
+    os.path.join(os.curdir, config_name),
+    os.path.join(os.path.expanduser('~'), '.config', project_name, config_name),
+    os.path.join('/etc', project_name, config_name),
+    os.environ.get(project_name+"_CONF"),
+    ]
+    for path in locations:
+        if path != None and os.path.exists(path) and os.path.isfile(path):
+            return path
+    return None
 
 
 def update(dl_url, force_update=False):
